@@ -1,4 +1,14 @@
+<meta charset="utf-8"> 
+
 <body>
+    <div>
+        <p>说明：</p>
+        <p>最下方点击【下载副本活动信息】按钮后，下方会出现副本开启时间以及双倍时间，</p>
+        <p>此时点击【计算】，将会自动考虑副本活动情况。</p>
+        <p>如果不点击，下方没有活动信息显示，将会只考虑默认周二周日副本。</p>
+        <p>如果活动信息错误，请联系白丝修复。</p>
+    </div>
+
     <p>
         目标等级: <input type="int" id="target_level" value="150"/>
     </p>
@@ -18,18 +28,102 @@
         推图经验（每小时）:  <input type="float" id="main_exp_pre_hour" value="621500"/>
     </p>
     <p>
-        副本经验（每次）:  <input type="float" id="zone_exp_pre_time" value="3520000"/>
+        副本经验（每次）:  <input type="float" id="zone_exp_pre_time" value="3522200"/>
     </p>
     <p>
         每天在线时间（小时）:  <input type="float" id="online_hours_every_day" value="1"/>
     </p>
 
     <p>
-        <button id="btn">compute</button>
+        <button id="btn">计算</button>
     </p>
 
+    <p>
+        <button id="load">下载副本活动信息</button>
+    </p>
+
+    <div id="info"></div>
+
+    <p>
+        <button id="show_debug"  style="VISIBILITY: hidden">show debug</button>
+    </p>
+    
+    <script type="text/javascript" src="https://www.w3school.com.cn/jquery/jquery-1.11.1.min.js"></script>
+
     <script>
-        
+        document.getElementById("load").onclick = function() {
+            $("#info").load("exp_date/info.txt");
+        }
+
+        function parse_date_from_raw(raw_str) {
+            var parts = raw_str.split(".");
+            var year = Number(parts[0]);
+            var month = Number(parts[1]);
+            var day = Number(parts[2]);
+            var date = new Date(0);
+            date.setFullYear(year);
+            date.setMonth(month - 1);
+            date.setDate(day);
+            // console.log(date.toLocaleDateString());
+            // console.log(date);
+            return date;
+        }
+
+        function parse_to_time_range(raw_str) {
+            var parts = raw_str.split("-");
+            var start = parse_date_from_raw(parts[0]);
+            var end = parse_date_from_raw(parts[1]);
+            return [start, end];
+        }
+
+        var g_double_time = [];
+        var g_open_time = [];
+
+        function parse_exp_info() {
+            var double_time = [];
+            var open_time = [];
+
+            $("#double p").each(function() {
+                var con = $(this).text();
+                var t = parse_to_time_range(con);
+                double_time.push(t);
+            });
+
+            $("#open p").each(function() {
+                var con = $(this).text();
+                var t = parse_to_time_range(con);
+                open_time.push(t);
+            });
+
+            // alert(parse_to_time_range(double_time[0]));
+            g_double_time = double_time;
+            g_open_time = open_time;
+        }
+
+        document.getElementById("show_debug").onclick = function() {
+            parse_exp_info();
+            console.log(g_double_time);
+            console.log(g_open_time);
+
+            function check(raw_str) {
+                var d = parse_date_from_raw(raw_str);
+                var a1 = has_zone_exp_online(d);
+                var a2 = has_zone_double_online(d);
+                console.log(raw_str, a1, a2);
+            }
+            
+            check("2021.6.8");
+            check("2021.6.10");
+            check("2021.6.11");
+            check("2021.6.12");
+            check("2021.6.13");
+            check("2021.6.14");
+            check("2021.6.15");
+            check("2021.6.17");
+            check("2021.6.18");
+            check("2021.6.19");
+        }
+
         function get_rest_exp(current_level, target_level, current_exp) {
             var target_exp = 0;
             for (var lv = current_level; lv < target_level; ++lv) {
@@ -53,8 +147,38 @@
         }
 
         function has_zone_exp(target_date) {
+            console.log("DEPRECATED!");
             var w = target_date.getDay();
             return (w == 2 || w == 0);
+        }
+
+        function has_zone_exp_online(target_date) {
+            var w = target_date.getDay();
+            // console.log(w);
+            if (w == 2 || w == 0) {
+                return true;
+            }
+            for (var i in g_open_time) {
+                var r = g_open_time[i];
+                // console.log("begin", r);
+                // console.log("check", target_date);
+                if (r[0] <= target_date && target_date < r[1]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function has_zone_double_online(target_date) {
+            for (var i in g_double_time) {
+                var r = g_double_time[i];
+                // console.log("begin", r);
+                // console.log("check", target_date);
+                if (r[0] <= target_date && target_date < r[1]) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         function shift_n_days(start_date, n_days) {
@@ -100,6 +224,8 @@
         }
 
         document.getElementById("btn").onclick = function() {
+            parse_exp_info();
+
             target_level = parseInt(document.getElementById("target_level").value);
             current_level = parseInt(document.getElementById("current_level").value);
             current_exp = parseInt(document.getElementById("current_exp").value);
@@ -118,7 +244,7 @@
             if (isNaN(zone_exp_pre_time)) { alert("副本经验 填写有误！"); return; }
             if (isNaN(online_hours_every_day)) { alert("每天在线时间 填写有误！"); return; }
 
-            console.log(target_level);
+            // console.log(target_level);
             // console.log(current_level);
             // console.log(current_exp);
             // console.log(speed_up_num);
@@ -161,7 +287,16 @@
 
                 var target_day_main_exp = (24 + speed_up_num * 2 + online_hours_every_day * 0.1) * main_exp_pre_hour;
                 var target_day_family_exp = family_exp_pre_day;
-                var target_day_zone_exp = has_zone_exp(target_day_date) ? zone_exp_pre_time * 6 : 0;
+                
+                var if_has_zone_exp = has_zone_exp_online(target_day_date);
+                var if_has_zone_double = has_zone_double_online(target_day_date);
+                var target_day_zone_exp = 0;
+                if (if_has_zone_exp) target_day_zone_exp = zone_exp_pre_time * 6;
+                if (if_has_zone_double) target_day_zone_exp *= 2;
+
+                if (if_has_zone_exp) {
+                    console.log(target_day_date, if_has_zone_double);
+                }
 
                 var target_day_sum_exp = target_day_main_exp + target_day_family_exp + target_day_zone_exp;
                 // console.log("here", target_day_main_exp, target_day_family_exp, target_day_zone_exp);
@@ -196,7 +331,12 @@
                 weekday_to_str[last_day_date.getDay()]
             );
 
-            var last_day_zone_exp = has_zone_exp(last_day_date) ? zone_exp_pre_time * 6 : 0;
+            // var last_day_zone_exp = has_zone_exp(last_day_date) ? zone_exp_pre_time * 6 : 0;
+            var if_last_has_zone_exp = has_zone_exp_online(last_day_date);
+            var if_last_has_zone_double = has_zone_double_online(last_day_date);
+            var last_day_zone_exp = 0;
+            if (if_last_has_zone_exp) last_day_zone_exp = zone_exp_pre_time * 6;
+            if (if_last_has_zone_double) last_day_zone_exp *= 2;
 
             rest_exp_last_day -= last_day_zone_exp;
 
@@ -205,7 +345,7 @@
                 alert(show_text);
                 return;
             } else {
-                if (has_zone_exp(last_day_date)) {
+                if (if_last_has_zone_exp) {
                     show_text += "首先打完经验本\n";
                 }
             }
