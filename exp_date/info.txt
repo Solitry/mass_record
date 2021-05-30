@@ -1,0 +1,14 @@
+<div>
+<div>
+    <p>副本持续开启时间：</p>
+</div>
+<div id="open">
+    
+</div>
+<div>
+    <p>副本双倍时间：</p>
+</div>
+<div id="double">
+    <p>2021.6.11-2021.6.18</p>
+</div>
+</div>
