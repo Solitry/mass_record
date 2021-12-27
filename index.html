@@ -7,7 +7,7 @@
         <p>此时点击【计算】，将会自动考虑副本活动情况。</p>
         <p>如果不点击，下方没有活动信息显示，将会只考虑默认周二周日副本。</p>
         <p>如果活动信息错误，请联系白丝修复。</p>
-        <p>修复190级之后的经验计算错误问题，支持到230级。</p>
+        <p>已经修复190级之后的经验计算错误问题，支持到目标等级240级。</p>
     </div>
 
     <p>
@@ -132,8 +132,10 @@
                 return 2999 * lv * lv + lv * lv * lv;
             } else if (lv <= 209) { // 191 ~ 209
                 return 127498057 + 12375155 * (lv - 191);
-            } else { // 210 ~ 230
+            } else if (lv <= 229) { // 210 ~ 229
                 return Math.floor(417019903.25 + 14231428.25 * (lv - 210)); 
+            } else { // 230 ~ 239
+                return 701648468 + 14231428 * (lv - 230);
             }
         }
 
@@ -307,9 +309,9 @@
                 if (if_has_zone_exp) target_day_zone_exp = zone_exp_pre_time * 6;
                 if (if_has_zone_double) target_day_zone_exp *= 2;
 
-                if (if_has_zone_exp) {
-                    console.log(target_day_date, if_has_zone_double);
-                }
+                // if (if_has_zone_exp) {
+                //     console.log(target_day_date, if_has_zone_double);
+                // }
 
                 var target_day_sum_exp = target_day_main_exp + target_day_family_exp + target_day_zone_exp;
                 // console.log("here", target_day_main_exp, target_day_family_exp, target_day_zone_exp);
