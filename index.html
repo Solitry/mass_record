@@ -7,6 +7,7 @@
         <p>此时点击【计算】，将会自动考虑副本活动情况。</p>
         <p>如果不点击，下方没有活动信息显示，将会只考虑默认周二周日副本。</p>
         <p>如果活动信息错误，请联系白丝修复。</p>
+        <p>修复190级之后的经验计算错误问题，支持到230级。</p>
     </div>
 
     <p>
@@ -123,15 +124,27 @@
             check("2021.6.18");
             check("2021.6.19");
         }
+        
+        function get_lv_exp(lv) {
+            if (lv <= 100) { // 1 ~ 100
+                return 1500 * lv * lv;
+            } else if (lv <= 190) { // 101 ~ 190
+                return 2999 * lv * lv + lv * lv * lv;
+            } else if (lv <= 209) { // 191 ~ 209
+                return 127498057 + 12375155 * (lv - 191);
+            } else { // 210 ~ 230
+                return Math.floor(417019903.25 + 14231428.25 * (lv - 210)); 
+            }
+        }
 
         function get_rest_exp(current_level, target_level, current_exp) {
             var target_exp = 0;
             for (var lv = current_level; lv < target_level; ++lv) {
-                if (lv <= 100) {
-                    target_exp += 1500 * lv * lv;
-                } else {
-                    target_exp += 2999 * lv * lv + lv * lv * lv;
-                }
+                tmp_val = get_lv_exp(lv);
+                target_exp += tmp_val;
+                // if (lv >= 190) {
+                //     console.log(lv, tmp_val);
+                // }
             }
             return target_exp - current_exp;
         }
